@@ -27,7 +27,39 @@ game = {
         altoCarro: null
 
     },
-    nivel2: {estado: false, finNivel: false},
+    nivel2: {
+        imagenFondo: null,
+        objetos_rio_array: ["tronco.png", "tronco_1.png"],
+        estado: false,
+        finNivel: false,
+        inicioX: 0,
+        personaje: [],
+        ancho: 0,
+        dx: 5,
+        numColumnas: 0,
+        a: null,
+        pocision: null,
+        anchoPersonaje: null,
+        altoPersonaje: null,
+        teclaNumero: 2,
+        corre: true,
+        objeto1: null,
+        objeto: null,
+        posicionPersonaje: 200,
+        cuadro: 1,
+        escala: .08,
+        saltoPersonaje: 200,
+        saltoPersonajeFin: 200,
+        contador_objetos: 0,
+        puntos: 0,
+        objeto_array: new Array(),
+        saltoAbajo: false,
+        saltoArriba: false,
+        cantidadObjeto: 0,
+        posicionSalto: 100,
+        colision_objeto: [],
+        coleccion_objeto: [],
+    },
     nivel3: {
         contador_objetos: 0,
         contador_mangos: 0,
@@ -187,10 +219,32 @@ function cargarAcciones() {
     }
 }
 
+function cargarAccionesRio() {
+    for (var i = 0; i < ACCION.length; i++) {
+        for (var j = 0; j < ACCION[i].n; j++) {
+            game.nivel2.personaje.push({
+                a: ACCION[i].a,
+                c: j + 1,
+                s: null
+            });
+        }
+    }
+}
+
 function existe(accion, cuadro) {
     for (var i = 0; i < game.nivel1.carro.length; i++) {
         if (game.nivel1.carro[i].a == accion &&
             game.nivel1.carro[i].c == cuadro) {
+            return i;
+        }
+    }
+    return -1;
+}
+
+function existePersonaje(accion, cuadro) {
+    for (var i = 0; i < game.nivel2.personaje.length; i++) {
+        if (game.nivel2.personaje[i].a == accion &&
+            game.nivel2.personaje[i].c == cuadro) {
             return i;
         }
     }
@@ -208,9 +262,19 @@ function generaObjeto() {
     game.nivel1.cantidadObjeto++;
 }
 
+function generarObjetosSobreAgua() {
+    objetoSobreAgua = true;
+    objetoxRio = game.canvas.width;
+    game.nivel2.objeto1 = new Image();
+    let i = Math.floor(Math.random() * game.nivel2.objetos_rio_array.length)
+    game.nivel2.objeto1.src = "objetos/" + game.nivel2.objetos_rio_array[i];
+    game.nivel2.pocision = game.nivel2.saltoPersonajeFin;
+    game.nivel2.cantidadObjeto++;
+}
+
+
 function dibujarCarro() {
     let index = existe(game.nivel1.movimiento, game.nivel1.cuadro);
-    // if (index > 0) {
     if (game.nivel1.carro[index].s == null) {
         let sprite = new Image();
 
@@ -234,15 +298,40 @@ function dibujarCarro() {
     if (game.nivel1.cuadro > game.nivel1.numeroDeFrames) {
         game.nivel1.cuadro = 1;
     }
-    // }
+}
+
+function dibujarPersonaje() {
+    let index = existePersonaje(game.nivel2.a, game.nivel2.cuadro);
+    if (game.nivel2.personaje[index].s == null) {
+        let spritePersonaje = new Image();
+        spritePersonaje.src = "redhatfiles/png/" + game.nivel2.a + " (" + game.nivel2.cuadro + ").png";
+        spritePersonaje.onload = function () {
+            game.ctx.drawImage(spritePersonaje,
+                game.nivel2.posicionPersonaje, game.nivel2.saltoPersonaje,
+                spritePersonaje.width * game.nivel2.escala, spritePersonaje.height * game.nivel2.escala);
+            if (game.nivel2.a === "Dead") {
+                // gameOver = true;
+            }
+            game.nivel2.personaje[index].s = spritePersonaje;
+            game.nivel2.anchoPersonaje = spritePersonaje.width;
+            game.nivel2.altoPersonaje = spritePersonaje.height;
+        }
+
+    } else {
+        game.ctx.drawImage(game.nivel2.personaje[index].s, game.nivel2.posicionPersonaje, game.nivel2.saltoPersonaje,
+            game.nivel2.anchoPersonaje * game.nivel2.escala, game.nivel2.altoPersonaje * game.nivel2.escala);
+    }
+    game.nivel2.cuadro++;
+    if (game.nivel2.cuadro > game.nivel2.numColumnas) {
+        game.nivel2.cuadro = 1;
+    }
 }
 
 
 function cargarMain() {
-
     cargarFrames();
     cargarAcciones();
-    console.log("cargar main")
+    cargarAccionesRio();
     game.canvas = document.getElementById("canvas");
     if (game.canvas && game.canvas.getContext) {
         game.ctx = game.canvas.getContext("2d");
@@ -295,7 +384,7 @@ const levelUp = () => {
 
 const inicio = () => {
     game.start = true;
-    if (game.gameOver || game.win ) {
+    if (game.gameOver || game.win) {
         window.location.reload();
     }
     game.intro = false;
@@ -322,6 +411,7 @@ const iniciarNivel1 = () => {
 
 }
 const iniciarNivel2 = () => {
+    inicioNivel2();
     game.nivel1.estado = false;
     game.nivel2.estado = true;
     game.nivel3.estado = false;
@@ -341,16 +431,16 @@ const iniciarNivel3 = () => {
 }
 const animar = () => {
     if (game.finJuego == false) {
-
         if (game.nivel1.estado) {
             verificarNivel1();
             colisionCarro();
             game.nivel1.puntos += 1;
             score();
             requestAnimationFrame(animar);
-            // dibujarCarro();
-            // cargarFondo();
         } else if (game.nivel2.estado) {
+            verificarNivel2();
+            score();
+            requestAnimationFrame(animar);
         } else if (game.nivel3.estado) {
             verificarNivel3();
             pintar();
@@ -400,17 +490,47 @@ const colisionesObjetos = () => {
 }
 const verificarNivel1 = () => {
     if (game.tecla[KEY_LEFT]) {
-        game.nivel1.teclaNumero = Number(1);
+        game.nivel1.teclaNumero = Number(NUM_LEFT);
         game.nivel1.posicionCarro = game.nivel1.objetos_pocision_array[0];
     } else if (game.tecla[KEY_RIGHT]) {
-        game.nivel1.teclaNumero = Number(3);
+        game.nivel1.teclaNumero = Number(NUM_RIGHT);
         game.nivel1.posicionCarro = game.nivel1.objetos_pocision_array[1];
     }
     if (game.nivel1.contadorTotal === 15) {
         game.nivel1.estado = false;
         game.levelUp = true;
 
-        game.nivel3.estado = true;//axalpusa nivel 2
+        game.nivel2.estado = true;
+        game.start = false;
+    }
+}
+const verificarNivel2 = () => {
+
+    if (game.nivel2.saltoArriba) {
+        game.nivel2.saltoPersonaje -= 1
+        if (game.nivel2.saltoPersonaje <= game.nivel2.posicionSalto) {
+            game.nivel2.saltoArriba = false;
+            game.nivel2.saltoAbajo = true;
+        }
+    } else if (game.nivel2.saltoAbajo) {
+        game.nivel2.saltoPersonaje += 1
+        if (game.nivel2.saltoPersonaje >= game.nivel2.saltoPersonajeFin) {
+            game.nivel2.saltoArriba = false;
+            game.nivel2.saltoAbajo = false;
+        }
+    }
+
+    if (game.tecla[KEY_UP]) {
+        game.nivel2.teclaNumero = Number(NUM_JUMP);
+        game.nivel2.saltoArriba = true;
+        game.nivel2.saltoAbajo = false;
+    } else {
+        //game.nivel2.teclaNumero = Number(NUM_RUN);
+    }
+    if( game.nivel2.puntos  >= 1000){
+        game.nivel2.estado = false;
+        game.levelUp = true;
+        game.nivel3.estado = true;
         game.start = false;
     }
 
@@ -432,7 +552,7 @@ const verificarNivel3 = () => {
         game.gameOver = true;
         game.start = false;
     }
-    if (game.nivel3.puntos >= 5) {//axalpusa 20
+    if (game.nivel3.puntos >= 10) {//axalpusa 20
         game.finJuego = true;
         game.nivel3.finNivel = true;
         game.win = true;
@@ -497,6 +617,12 @@ const score = () => {
         game.ctx.fillText("PUNTOS: " + game.nivel1.puntos, 10, 20);
         game.ctx.restore();
     }
+    if (game.nivel2.estado) {
+        game.ctx.fillStyle = "red";
+        game.ctx.font = "bold 20px Courier";
+        game.ctx.fillText("PUNTOS: " + game.nivel2.puntos, 10, 20);
+        game.ctx.restore();
+    }
     if (game.nivel3.estado) {
         game.ctx.fillStyle = "red";
         game.ctx.font = "bold 20px Courier";
@@ -521,7 +647,7 @@ const inicioNivel1 = () => {
         setInterval(function () {
             game.nivel1.dy = game.nivel1.dy + 1;
             game.nivel1.contadorTotal++;
-        }, 500); //28000 axalpusa
+        }, 200); //28000 axalpusa
         setInterval(function () {
             if (game.nivel1.estado) {
                 game.nivel1.inicioY -= game.nivel1.dy;
@@ -545,6 +671,57 @@ const inicioNivel1 = () => {
                 game.nivel1.movimiento = ACCION[game.nivel1.teclaNumero].a;
                 game.nivel1.numeroDeFrames = ACCION[game.nivel1.teclaNumero].n;
                 dibujarCarro();
+            }
+
+        }, 1000 / 60);
+
+    }
+}
+const inicioNivel2 = () => {
+    game.nivel2.imagenFondo = new Image();
+    game.nivel2.imagenFondo.src = "imagenes/rio.png";
+    game.nivel2.imagenFondo.onload = function () {
+        game.nivel2.ancho = game.canvas.width;
+        game.nivel2.numColumnas = ACCION[game.nivel2.teclaNumero].n;
+        game.nivel2.a = ACCION[game.nivel2.teclaNumero].a;
+        objetoxRio = game.nivel2.ancho;
+        generarObjetosSobreAgua();
+        objetoSobreAgua = true;
+        setInterval(function () {
+            game.nivel2.puntos+=1;
+            if (game.nivel2.estado) {
+                game.nivel2.inicioX += game.nivel2.dx;
+                game.nivel2.ancho -= game.nivel2.dx;
+                game.nivel2.objetox -= game.nivel2.dx;
+
+                game.ctx.drawImage(game.nivel2.imagenFondo,
+                    game.nivel2.inicioX, 0,
+                    game.nivel2.ancho, game.nivel2.imagenFondo.height,
+                    0, 0,
+                    game.nivel2.ancho, game.canvas.height);
+
+                game.ctx.drawImage(game.nivel2.imagenFondo,
+                    0, 0,
+                    game.nivel2.imagenFondo.width - game.nivel2.ancho, game.nivel2.imagenFondo.height,
+                    game.nivel2.imagenFondo.width - game.nivel2.inicioX, 0,
+                    game.canvas.width - game.nivel2.ancho, game.canvas.height);
+                if (objetoSobreAgua) {
+                    game.ctx.drawImage(game.nivel2.objeto1,
+                        0, 0,
+                        game.nivel2.imagenFondo.width, game.nivel2.imagenFondo.height,
+                        game.nivel2.imagenFondo.width - game.nivel2.objeto1.width/2 - game.nivel2.inicioX, 320,// game.nivel2.pocision
+                        game.nivel2.objeto1.width, game.nivel2.objeto1.height);
+
+                }
+                game.nivel2.numColumnas = ACCION[game.nivel2.teclaNumero].n;
+                game.nivel2.a = ACCION[game.nivel2.teclaNumero].a;
+                dibujarPersonaje();
+                if (game.nivel2.ancho <= 0) {
+                    game.nivel2.inicioX = 0;
+                    game.nivel2.ancho = game.canvas.width;
+                    generarObjetosSobreAgua();
+                }
+
             }
 
         }, 1000 / 60);
