@@ -1,0 +1,294 @@
+<!doctype html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>mango</title>
+    <style>
+        body {
+            width: 1000px;
+            margin: 0 auto;
+            text-align: center;
+        }
+
+        canvas {
+            background-color: white;
+            border: solid yellow 3px;
+        }
+    </style>
+    <script>
+nivel3 = {
+	canvas: null,
+	ctx: null,
+    imagen: null,
+    imagenEnemigo: null,
+    imagenMango: null,
+    imagenObjeto: null,
+    teclaPulsada: null,
+    tecla: [],
+    mango_array: new Array(),
+    objeto_array: new Array(),
+    enemigos_array: new Array(),
+    colision_mango:[],
+    colision_objeto:[],
+    coleccion_mango:[],
+    coleccion_objeto:[],
+    disparo: false,
+    finJuego: false,
+    boing:null,
+    intro:null,
+    fin:null,
+    contador_objetos:0,
+    contador_mangos:0,
+    puntos:0,
+    vidas:0
+
+}
+
+    /*******************
+    CONSTANTES
+    ********************/
+    const KEY_ENTER = 13;
+    const KEY_LEFT = 65; // A
+    const KEY_UP = 87; // W
+    const KEY_RIGHT = 68; // D
+    const KEY_DOWN = 83; // S
+    const BARRA = 32; // Espacio
+
+    /*****************
+    OBJETOS
+    ******************/
+   
+   function Mango(x, y, w) {
+        this.x = x;
+        this.y = y;
+        this.w = w*10;
+        nivel3.imagenMango = new Image();
+        nivel3.imagenMango.src = "objetos/mango.png";
+         this.disparar = function () {
+           nivel3.ctx.save();
+           nivel3.ctx.drawImage(nivel3.imagenMango, this.x, this.y, this.w, this.w);
+           this.y = this.y + 6;
+           nivel3.ctx.restore();
+       };
+    }
+    function Objeto(x, y, w) {
+        this.x = x;
+        this.y = y;
+        this.w = w*10;
+        nivel3.imagenObjeto = new Image();
+        nivel3.imagenObjeto.src = "objetos/roca.png";
+        this.disparar = function () {
+           nivel3.ctx.save();
+           nivel3.ctx.drawImage(nivel3.imagenObjeto, this.x, this.y, this.w, this.w);
+           this.y = this.y + 6;
+           nivel3.ctx.restore();
+       };
+    }
+
+    function Jugador(x) {
+            this.x = x;
+            this.w=120;
+            this.h=100;
+            this.y = nivel3.canvas.height - this.h ;
+            this.dibujar = function (x) {
+                this.x = x;
+                nivel3.ctx.drawImage(nivel3.imagen, this.x, this.y, this.w, this.h);
+            };
+    }
+
+    function Enemigo(x, y) {
+                this.x = x;
+                this.y = y;
+                this.w = 50;
+                this.figura = true;
+                this.vive = true;
+    }
+
+    /***********
+    FUNCIONES
+    ************/
+ 
+
+    const inicio = () => {
+            nivel3.ctx.clearRect(0, 0, nivel3.canvas.width, nivel3.canvas.height);
+            nivel3.caratula = false;
+            nivel3.jugador = new Jugador(0);
+            nivel3.x = nivel3.canvas.width/2;
+            nivel3.jugador.dibujar(nivel3.x);
+            animar();
+        }
+
+
+
+//var x=100 , y=100;
+
+const animar = () =>{
+    if(nivel3.finJuego==false){
+        requestAnimationFrame(animar);
+        verificar();
+        pintar();
+        colisiones();
+    }
+}
+
+const colisiones=()=>{
+    let enemigo , bala;
+	//Colisión balas enemigas
+    for(var j=0;j<nivel3.mango_array.length;j++){
+        bala = nivel3.mango_array[j];
+        if(bala !=null){
+            if ((bala.x > nivel3.jugador.x) &&
+                (bala.x < nivel3.jugador.x + nivel3.jugador.w) &&
+                (bala.y > nivel3.jugador.y) &&
+                (bala.y < nivel3.jugador.y + nivel3.jugador.h)) {
+                  nivel3.coleccion_mango.push(nivel3.colision_mango[nivel3.contador_mangos-1]);
+                }
+        }
+    }
+    for(var j=0;j<nivel3.objeto_array.length;j++){
+        bala = nivel3.objeto_array[j];
+        if(bala !=null){
+            if ((bala.x > nivel3.jugador.x) &&
+                (bala.x < nivel3.jugador.x + nivel3.jugador.w) &&
+                (bala.y > nivel3.jugador.y) &&
+                (bala.y < nivel3.jugador.y + nivel3.jugador.h)) {
+                 nivel3.coleccion_objeto.push(nivel3.colision_objeto[nivel3.contador_objetos-1]);
+                }
+        }
+    }
+}
+
+const verificar = ()=>{
+    let listaSinDuplicadosMango = [...new Set(nivel3.coleccion_mango)];
+    let listaSinDuplicadosObjetos = [...new Set(nivel3.coleccion_objeto)];
+    nivel3.puntos = listaSinDuplicadosMango.length;
+    nivel3.vidas =  listaSinDuplicadosObjetos.length;
+    if(nivel3.tecla[KEY_RIGHT]) nivel3.x+=10;
+    if(nivel3.tecla[KEY_LEFT])  nivel3.x -= 10;
+    if(nivel3.x>nivel3.canvas.width -10) nivel3.x = nivel3.canvas.width - 10;
+    if(nivel3.x<0) nivel3.x =10;
+    if(Math.random()>0.99){
+        caidaMango();
+    }
+    if(Math.random()>0.99){
+        caidaObjeto();
+    }
+    if(nivel3.vidas >= 5){
+        alert("nivel3 OVER")
+    }
+    if(nivel3.puntos >= 20){
+        alert("WINNER")
+    }
+}
+
+const caidaObjeto=()=>{
+    nivel3.contador_objetos++;
+    nivel3.colision_objeto.push(nivel3.contador_objetos);
+    var ultimos = new Array();
+    for(var i=nivel3.enemigos_array.length-1;i>0;i--){
+        if(nivel3.enemigos_array[i]!=null){
+            ultimos.push(i);
+        }
+        if(ultimos.length==20) break;
+    }
+    d = ultimos[Math.floor(Math.random() * 20)];
+    nivel3.objeto_array.push(new Objeto(nivel3.enemigos_array[d].x+nivel3.enemigos_array[d].w/2,nivel3.enemigos_array[d].y,5));
+}
+
+const caidaMango=()=>{
+    nivel3.contador_mangos++;
+    nivel3.colision_mango.push(nivel3.contador_mangos);
+    var ultimos = new Array();
+    for(var i=nivel3.enemigos_array.length-1;i>0;i--){
+        if(nivel3.enemigos_array[i]!=null){
+            ultimos.push(i);
+        }
+        if(ultimos.length==20) break;
+    }
+    d = ultimos[Math.floor(Math.random() * 20)];
+    nivel3.mango_array.push(new Mango(nivel3.enemigos_array[d].x+nivel3.enemigos_array[d].w/2,nivel3.enemigos_array[d].y,5));
+}
+const pintar = ()=>{
+    nivel3.ctx.clearRect(0, 0, nivel3.canvas.width, nivel3.canvas.height);
+    nivel3.jugador.dibujar(nivel3.x);
+    for (var i = 0; i < nivel3.objeto_array.length; i++) {
+            if (nivel3.objeto_array[i] != null) {
+                nivel3.objeto_array[i].disparar();
+                if (nivel3.objeto_array[i].y > nivel3.canvas.height)
+                    nivel3.objeto_array[i] = null;
+            }
+        }
+    for (var i = 0; i < nivel3.mango_array.length; i++) {
+            if (nivel3.mango_array[i] != null) {
+                nivel3.mango_array[i].disparar();
+                if (nivel3.mango_array[i].y > nivel3.canvas.height)
+                    nivel3.mango_array[i] = null;
+            }
+        }
+    score();
+
+}
+const score=()=>{
+    //nivel3.ctx.save();
+    nivel3.ctx.fillStyle = "red";
+    nivel3.ctx.font = "bold 20px Courier";
+    nivel3.ctx.fillText("PUNTOS: " + nivel3.puntos, 10, 20);
+    nivel3.ctx.restore();	
+
+    nivel3.ctx.fillStyle = "red";
+    nivel3.ctx.font = "bold 20px Courier";
+    nivel3.ctx.fillText("VIDAS: " + (5-nivel3.vidas), 400, 20);
+    nivel3.ctx.restore();	
+
+}
+
+    /*************
+    LISTENER
+    **************/
+
+document.addEventListener("keydown",function(e){
+    nivel3.teclaPulsada=e.keyCode;
+    nivel3.tecla[e.keyCode]=true;
+});
+
+document.addEventListener("keyup", function (e) {
+    nivel3.tecla[e.keyCode] = false;
+});
+
+window.requestAnimationFrame = (function () {
+        return window.requestAnimationFrame ||
+            window.webkitRequestAnimationFrame ||
+            window.mozRequestAnimationFrame ||
+            function (callback) { window.setTomiout(callback, 17); }
+})();
+
+window.onload=function(){
+	nivel3.canvas = document.getElementById("canvas");
+	if(nivel3.canvas && nivel3.canvas.getContext){
+		nivel3.ctx = canvas.getContext("2d");
+		if (nivel3.ctx) {
+       	    nivel3.imagen = new Image();
+            nivel3.imagen.src = "objetos/jugador.png";
+            //crear enemigos
+            nivel3.imagenEnemigo = new Image();
+            nivel3.imagenEnemigo.src = "objetos/mango.png";
+            nivel3.imagenEnemigo.onload=function(){
+                for(var i=0 ; i<2;i++){
+                    for (var j = 0; j < 20; j++) {
+                        nivel3.enemigos_array.push(new Enemigo(100+40*j , 35+45*i));
+                    }
+                }
+            }
+            nivel3.canvas.addEventListener("click", inicio(), false);
+		} else{
+			alert("NO cuentas con CANVAS")
+		};
+	}
+}	
+    </script>
+</head>
+<canvas id="canvas" width="1000px" height="650px">
+    Tu navegador no soporta CANVAS
+</canvas>
+</body>
+</html>
