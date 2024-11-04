@@ -61,6 +61,7 @@ game = {
         coleccion_objeto: [],
     },
     nivel3: {
+        imagenFondo: null,
         contador_objetos: 0,
         contador_mangos: 0,
         imagenEnemigo: null,
@@ -527,7 +528,7 @@ const verificarNivel2 = () => {
     } else {
         //game.nivel2.teclaNumero = Number(NUM_RUN);
     }
-    if( game.nivel2.puntos  >= 1000){
+    if (game.nivel2.puntos >= 10) { //axalpusa 1000
         game.nivel2.estado = false;
         game.levelUp = true;
         game.nivel3.estado = true;
@@ -688,7 +689,7 @@ const inicioNivel2 = () => {
         generarObjetosSobreAgua();
         objetoSobreAgua = true;
         setInterval(function () {
-            game.nivel2.puntos+=1;
+            game.nivel2.puntos += 1;
             if (game.nivel2.estado) {
                 game.nivel2.inicioX += game.nivel2.dx;
                 game.nivel2.ancho -= game.nivel2.dx;
@@ -709,7 +710,7 @@ const inicioNivel2 = () => {
                     game.ctx.drawImage(game.nivel2.objeto1,
                         0, 0,
                         game.nivel2.imagenFondo.width, game.nivel2.imagenFondo.height,
-                        game.nivel2.imagenFondo.width - game.nivel2.objeto1.width/2 - game.nivel2.inicioX, 320,// game.nivel2.pocision
+                        game.nivel2.imagenFondo.width - game.nivel2.objeto1.width / 2 - game.nivel2.inicioX, 320,// game.nivel2.pocision
                         game.nivel2.objeto1.width, game.nivel2.objeto1.height);
 
                 }
@@ -729,6 +730,11 @@ const inicioNivel2 = () => {
     }
 }
 const inicioNivel3 = () => {
+    game.nivel3.imagenFondo = new Image();
+    game.nivel3.imagenFondo.src = "imagenes/fondo3.png";
+    game.nivel3.imagenFondo.onload = function () {
+        game.ctx.drawImage(game.nivel3.imagenFondo, 0, 0, 400, game.canvas.height);
+    }
     game.nivel3.imagenJugador = new Image();
     game.nivel3.imagenJugador.src = "objetos/jugador.png";
     game.nivel3.imagenEnemigo = new Image();
