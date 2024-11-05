@@ -28,6 +28,8 @@ game = {
 
     },
     nivel2: {
+        sinTronco: false,
+        cantTronco:0,
         imagenFondo: null,
         objetos_rio_array: ["tronco.png", "tronco_1.png"],
         estado: false,
@@ -45,9 +47,10 @@ game = {
         corre: true,
         objeto1: null,
         objeto: null,
-        posicionPersonaje: 200,
+        posicionPersonaje: 80,
         cuadro: 1,
-        escala: .08,
+        inicio: true,
+        escala: .15,
         saltoPersonaje: 200,
         saltoPersonajeFin: 200,
         contador_objetos: 0,
@@ -57,6 +60,7 @@ game = {
         saltoArriba: false,
         cantidadObjeto: 0,
         posicionSalto: 100,
+        arregloAgua: [],
         colision_objeto: [],
         coleccion_objeto: [],
     },
@@ -135,7 +139,7 @@ const ESCALA = .5;
 function Mango(x, y, w) {
     this.x = x;
     this.y = y;
-    this.w = w * 10;
+    this.w = w * 12;
     game.nivel3.imagenMango = new Image();
     game.nivel3.imagenMango.src = "objetos/mango.png";
     this.disparar = function () {
@@ -149,9 +153,9 @@ function Mango(x, y, w) {
 function Objeto(x, y, w) {
     this.x = x;
     this.y = y;
-    this.w = w * 10;
+    this.w = w * 12;
     game.nivel3.imagenObjeto = new Image();
-    game.nivel3.imagenObjeto.src = "objetos/roca.png";
+    game.nivel3.imagenObjeto.src = "objetos/objeto_2.png";
     this.disparar = function () {
         game.ctx.save();
         game.ctx.drawImage(game.nivel3.imagenObjeto, this.x, this.y, this.w, this.w);
@@ -162,8 +166,8 @@ function Objeto(x, y, w) {
 
 function Jugador(x) {
     this.x = x;
-    this.w = 120;
-    this.h = 100;
+    this.w = 100;
+    this.h = 250;
     this.y = game.canvas.height - this.h;
     this.dibujar = function (x) {
         this.x = x;
@@ -310,14 +314,10 @@ function dibujarPersonaje() {
             game.ctx.drawImage(spritePersonaje,
                 game.nivel2.posicionPersonaje, game.nivel2.saltoPersonaje,
                 spritePersonaje.width * game.nivel2.escala, spritePersonaje.height * game.nivel2.escala);
-            if (game.nivel2.a === "Dead") {
-                // gameOver = true;
-            }
             game.nivel2.personaje[index].s = spritePersonaje;
             game.nivel2.anchoPersonaje = spritePersonaje.width;
             game.nivel2.altoPersonaje = spritePersonaje.height;
         }
-
     } else {
         game.ctx.drawImage(game.nivel2.personaje[index].s, game.nivel2.posicionPersonaje, game.nivel2.saltoPersonaje,
             game.nivel2.anchoPersonaje * game.nivel2.escala, game.nivel2.altoPersonaje * game.nivel2.escala);
@@ -393,13 +393,13 @@ const inicio = () => {
     game.win = false;
     game.levelUp = false;
     game.ctx.clearRect(0, 0, game.canvas.width, game.canvas.height);
-    if (game.nivel1.estado) {
-        iniciarNivel1();
-    } else if (game.nivel2.estado) {
-        iniciarNivel2();
-    } else if (game.nivel3.estado) {
-        iniciarNivel3();
-    }
+     if (game.nivel1.estado) {
+         iniciarNivel1();
+     } else if (game.nivel2.estado) {
+         iniciarNivel2();
+     } else if (game.nivel3.estado) {
+         iniciarNivel3();
+     }
 }
 
 const iniciarNivel1 = () => {
@@ -497,7 +497,7 @@ const verificarNivel1 = () => {
         game.nivel1.teclaNumero = Number(NUM_RIGHT);
         game.nivel1.posicionCarro = game.nivel1.objetos_pocision_array[1];
     }
-    if (game.nivel1.contadorTotal === 15) {
+    if (game.nivel1.contadorTotal === 18) {//axalpusa 20
         game.nivel1.estado = false;
         game.levelUp = true;
 
@@ -506,7 +506,11 @@ const verificarNivel1 = () => {
     }
 }
 const verificarNivel2 = () => {
-
+    let listaSinDuplicadosObjetos = [...new Set(game.nivel2.arregloAgua)];
+    game.menosVidas = listaSinDuplicadosObjetos.length;
+    if (game.nivel2.saltoPersonajeFin === game.nivel2.saltoPersonaje && game.nivel2.sinTronco ) {
+        game.nivel2.arregloAgua.push(game.nivel2.cantTronco);
+    }
     if (game.nivel2.saltoArriba) {
         game.nivel2.saltoPersonaje -= 1
         if (game.nivel2.saltoPersonaje <= game.nivel2.posicionSalto) {
@@ -528,10 +532,17 @@ const verificarNivel2 = () => {
     } else {
         //game.nivel2.teclaNumero = Number(NUM_RUN);
     }
-    if (game.nivel2.puntos >= 500) { //axalpusa 1000
+    if (game.nivel2.puntos >= 2000) { //axalpusa 2000
         game.nivel2.estado = false;
         game.levelUp = true;
         game.nivel3.estado = true;
+        game.start = false;
+    }
+    if (game.vidas <= game.menosVidas) {
+        game.finJuego = true;
+        game.nivel2.estado = false;
+        game.nivel2.finNivel = true;
+        game.gameOver = true;
         game.start = false;
     }
 
@@ -553,7 +564,7 @@ const verificarNivel3 = () => {
         game.gameOver = true;
         game.start = false;
     }
-    if (game.nivel3.puntos >= 10) {//axalpusa 20
+    if (game.nivel3.puntos >= 20) {//axalpusa 20
         game.finJuego = true;
         game.nivel3.finNivel = true;
         game.win = true;
@@ -589,12 +600,15 @@ const caidaMango = () => {
     game.nivel3.mango_array.push(new Mango(game.nivel3.enemigos_array[d].x + game.nivel3.enemigos_array[d].w / 2, game.nivel3.enemigos_array[d].y, 5));
 }
 const pintar = () => {
+
     game.ctx.clearRect(0, 0, game.canvas.width, game.canvas.height);
+    game.ctx.drawImage(game.nivel3.imagenFondo, 0, 0, game.canvas.width, game.canvas.height);
     game.jugador.dibujar(game.x);
     pintarMango();
     pintarObjeto();
     score();
 }
+
 const pintarMango = () => {
     for (var i = 0; i < game.nivel3.mango_array.length; i++) {
         if (game.nivel3.mango_array[i] != null) {
@@ -603,6 +617,7 @@ const pintarMango = () => {
         }
     }
 }
+
 const pintarObjeto = () => {
     for (var i = 0; i < game.nivel3.objeto_array.length; i++) {
         if (game.nivel3.objeto_array[i] != null) {
@@ -614,26 +629,26 @@ const pintarObjeto = () => {
 const score = () => {
     if (game.nivel1.estado) {
         game.ctx.fillStyle = "red";
-        game.ctx.font = "bold 20px Courier";
-        game.ctx.fillText("PUNTOS: " + game.nivel1.puntos, 10, 20);
+        game.ctx.font = "bold 24px Courier";
+        game.ctx.fillText("PUNTOS: " + game.nivel1.puntos, 150, 20);
         game.ctx.restore();
     }
     if (game.nivel2.estado) {
         game.ctx.fillStyle = "red";
-        game.ctx.font = "bold 20px Courier";
-        game.ctx.fillText("PUNTOS: " + game.nivel2.puntos, 10, 20);
+        game.ctx.font = "bold 24px Courier";
+        game.ctx.fillText("PUNTOS: " + game.nivel2.puntos, 150, 20);
         game.ctx.restore();
     }
     if (game.nivel3.estado) {
         game.ctx.fillStyle = "red";
-        game.ctx.font = "bold 20px Courier";
-        game.ctx.fillText("PUNTOS: " + game.nivel3.puntos, 10, 20);
+        game.ctx.font = "bold 24px Courier";
+        game.ctx.fillText("PUNTOS: " + game.nivel3.puntos, 150, 20);
         game.ctx.restore();
     }
 
     game.ctx.fillStyle = "red";
-    game.ctx.font = "bold 20px Courier";
-    game.ctx.fillText("VIDAS: " + (game.vidas - game.menosVidas), 400, 20);
+    game.ctx.font = "bold 24px Courier";
+    game.ctx.fillText("VIDAS: " + (game.vidas - game.menosVidas), 650, 20);
     game.ctx.restore();
 }
 const inicioNivel1 = () => {
@@ -648,7 +663,7 @@ const inicioNivel1 = () => {
         setInterval(function () {
             game.nivel1.dy = game.nivel1.dy + 1;
             game.nivel1.contadorTotal++;
-        }, 1400); //28000 axalpusa
+        }, 2500); //2800 axalpusa
         setInterval(function () {
             if (game.nivel1.estado) {
                 game.nivel1.inicioY -= game.nivel1.dy;
@@ -706,35 +721,46 @@ const inicioNivel2 = () => {
                     game.nivel2.imagenFondo.width - game.nivel2.ancho, game.nivel2.imagenFondo.height,
                     game.nivel2.imagenFondo.width - game.nivel2.inicioX, 0,
                     game.canvas.width - game.nivel2.ancho, game.canvas.height);
+
                 if (objetoSobreAgua) {
+
+                    if (!game.nivel2.inicio && game.nivel2.inicioX <= 400 ) {
+                        game.nivel2.sinTronco = true;
+                    }else{
+                        game.nivel2.sinTronco = false;
+                    }
+                    if (game.nivel2.inicio) {
+                        game.ctx.drawImage(game.nivel2.objeto1,
+                            0, 0,
+                            game.nivel2.imagenFondo.width, game.nivel2.imagenFondo.height,
+                            0 - game.nivel2.inicioX, 420,
+                            game.nivel2.objeto1.width, game.nivel2.objeto1.height);
+                    }
                     game.ctx.drawImage(game.nivel2.objeto1,
                         0, 0,
                         game.nivel2.imagenFondo.width, game.nivel2.imagenFondo.height,
-                        game.nivel2.imagenFondo.width - game.nivel2.objeto1.width / 2 - game.nivel2.inicioX, 320,// game.nivel2.pocision
+                        game.nivel2.imagenFondo.width - game.nivel2.objeto1.width / 2 - game.nivel2.inicioX, 420,
                         game.nivel2.objeto1.width, game.nivel2.objeto1.height);
 
                 }
                 game.nivel2.numColumnas = ACCION[game.nivel2.teclaNumero].n;
                 game.nivel2.a = ACCION[game.nivel2.teclaNumero].a;
                 dibujarPersonaje();
+
                 if (game.nivel2.ancho <= 0) {
                     game.nivel2.inicioX = 0;
                     game.nivel2.ancho = game.canvas.width;
                     generarObjetosSobreAgua();
+                    game.nivel2.inicio = false;
+                    game.nivel2.cantTronco ++;
                 }
-
             }
-
         }, 1000 / 60);
-
     }
 }
 const inicioNivel3 = () => {
-   /* game.nivel3.imagenFondo = new Image();//axalpusa
+    game.nivel3.imagenFondo = new Image();
     game.nivel3.imagenFondo.src = "imagenes/fondo3.png";
-    game.nivel3.imagenFondo.onload = function () {
-        game.ctx.drawImage(game.nivel3.imagenFondo, 0, 0, 400, game.canvas.height);
-    }*/
     game.nivel3.imagenJugador = new Image();
     game.nivel3.imagenJugador.src = "objetos/jugador.png";
     game.nivel3.imagenEnemigo = new Image();
