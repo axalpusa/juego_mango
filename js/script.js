@@ -730,11 +730,11 @@ const inicioNivel2 = () => {
     }
 }
 const inicioNivel3 = () => {
-    game.nivel3.imagenFondo = new Image();
+   /* game.nivel3.imagenFondo = new Image();//axalpusa
     game.nivel3.imagenFondo.src = "imagenes/fondo3.png";
     game.nivel3.imagenFondo.onload = function () {
         game.ctx.drawImage(game.nivel3.imagenFondo, 0, 0, 400, game.canvas.height);
-    }
+    }*/
     game.nivel3.imagenJugador = new Image();
     game.nivel3.imagenJugador.src = "objetos/jugador.png";
     game.nivel3.imagenEnemigo = new Image();
