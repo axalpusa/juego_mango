@@ -528,7 +528,7 @@ const verificarNivel2 = () => {
     } else {
         //game.nivel2.teclaNumero = Number(NUM_RUN);
     }
-    if (game.nivel2.puntos >= 10) { //axalpusa 1000
+    if (game.nivel2.puntos >= 500) { //axalpusa 1000
         game.nivel2.estado = false;
         game.levelUp = true;
         game.nivel3.estado = true;
@@ -648,7 +648,7 @@ const inicioNivel1 = () => {
         setInterval(function () {
             game.nivel1.dy = game.nivel1.dy + 1;
             game.nivel1.contadorTotal++;
-        }, 200); //28000 axalpusa
+        }, 1400); //28000 axalpusa
         setInterval(function () {
             if (game.nivel1.estado) {
                 game.nivel1.inicioY -= game.nivel1.dy;
