@@ -663,7 +663,7 @@ const inicioNivel1 = () => {
         setInterval(function () {
             game.nivel1.dy = game.nivel1.dy + 1;
             game.nivel1.contadorTotal++;
-        }, 2500); //2800 axalpusa
+        }, 2500); //axalpusa 2800
         setInterval(function () {
             if (game.nivel1.estado) {
                 game.nivel1.inicioY -= game.nivel1.dy;
