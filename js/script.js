@@ -88,21 +88,109 @@ game = {
     intro: true,
     imagenIntro: null,
     introFrame: [],
-    finJuego: false,
-    gameOver: false,
     gameOverFrame: [],
     imagenGameOver: null,
-    levelUp: false,
     imagenLevelUp: null,
     levelUpFrame: [],
-    win: false,
     imagenWin: null,
     winFrame: [],
     vidas: 5,
+    win: false,
+    levelUp: false,
+    finJuego: false,
+    gameOver: false,
     menosVidas: 0,
     frameIndex: 0,
     start: false,
+    lvl:0
 }
+
+
+
+
+nivel1Inicio= {
+    objeto1: null,
+    objetos_array: ["Stone.png", "Stone_1.png", "Stone_2.png", "Stone_3.png"],
+    objetos_pocision_array: [470, 540],
+    imagenFondo: null,
+    cantidadObjeto: 0,
+    contadorTotal: 0,
+    carro: [],
+    arregloColisiones: [],
+    numeroDeFrames: 0,
+    movimiento: null,
+    posicionCarro: 510,
+    posicion: null,
+    objeto: null,
+    puntos: 0,
+    estado: true,
+    finNivel: false,
+    teclaNumero: 0,
+    inicioY: 0,
+    altura: 0,
+    dy: 2,
+    cuadro: 1,
+    anchoCarro: null,
+    altoCarro: null
+};
+
+nivel2Inicio=  {
+    sinTronco: false,
+    cantTronco:0,
+    imagenFondo: null,
+    objetos_rio_array: ["tronco.png", "tronco_1.png"],
+    estado: false,
+    finNivel: false,
+    inicioX: 0,
+    personaje: [],
+    ancho: 0,
+    dx: 5,
+    numColumnas: 0,
+    a: null,
+    pocision: null,
+    anchoPersonaje: null,
+    altoPersonaje: null,
+    teclaNumero: 2,
+    corre: true,
+    objeto1: null,
+    objeto: null,
+    posicionPersonaje: 80,
+    cuadro: 1,
+    inicio: true,
+    escala: .15,
+    saltoPersonaje: 200,
+    saltoPersonajeFin: 200,
+    contador_objetos: 0,
+    puntos: 0,
+    objeto_array: new Array(),
+    saltoAbajo: false,
+    saltoArriba: false,
+    cantidadObjeto: 0,
+    posicionSalto: 100,
+    arregloAgua: [],
+    colision_objeto: [],
+    coleccion_objeto: [],
+};
+nivel3Inicio= {
+    imagenFondo: null,
+    contador_objetos: 0,
+    contador_mangos: 0,
+    imagenEnemigo: null,
+    imagenJugador: null,
+    imagenMango: null,
+    imagenObjeto: null,
+    mango_array: new Array(),
+    objeto_array: new Array(),
+    enemigos_array: new Array(),
+    colision_mango: [],
+    colision_objeto: [],
+    coleccion_mango: [],
+    coleccion_objeto: [],
+    puntos: 0,
+    estado: false,
+    finNivel: false
+};
+
 
 /*******************
  CONSTANTES
@@ -384,9 +472,24 @@ const levelUp = () => {
 }
 
 const inicio = () => {
+    console.log("inicio")
     game.start = true;
-    if (game.gameOver || game.win) {
+    if (game.win) {
         window.location.reload();
+    }
+    console.log(game.gameOver)
+    if (game.gameOver ) {//axalpusa
+        game.vidas= 5;
+        game.finJuego = false;
+        game.menosVidas=  0;
+        game.frameIndex= 0;
+        if (game.lvl == 1) {
+            game.nivel1.estado = true;
+        } else if (game.lvl == 2) {
+            game.nivel2.estado = true;
+        } else if (game.lvl == 3) {
+            game.nivel3.estado = true;
+        }
     }
     game.intro = false;
     game.gameOver = false;
@@ -394,10 +497,13 @@ const inicio = () => {
     game.levelUp = false;
     game.ctx.clearRect(0, 0, game.canvas.width, game.canvas.height);
      if (game.nivel1.estado) {
+         game.lvl = 1;
          iniciarNivel1();
      } else if (game.nivel2.estado) {
+         game.lvl = 2;
          iniciarNivel2();
      } else if (game.nivel3.estado) {
+         game.lvl = 3;
          iniciarNivel3();
      }
 }
@@ -538,7 +644,7 @@ const verificarNivel2 = () => {
         game.nivel3.estado = true;
         game.start = false;
     }
-    if (game.vidas <= game.menosVidas) {
+    if (game.vidas <= game.menosVidas+4) {
         game.finJuego = true;
         game.nivel2.estado = false;
         game.nivel2.finNivel = true;
@@ -663,7 +769,7 @@ const inicioNivel1 = () => {
         setInterval(function () {
             game.nivel1.dy = game.nivel1.dy + 1;
             game.nivel1.contadorTotal++;
-        }, 2500); //axalpusa 2800
+        }, 50); //axalpusa 2500
         setInterval(function () {
             if (game.nivel1.estado) {
                 game.nivel1.inicioY -= game.nivel1.dy;
