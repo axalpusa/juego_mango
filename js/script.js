@@ -603,7 +603,7 @@ const verificarNivel3 = () => {
         game.start = false;
        
     }
-    if (game.nivel3.puntos >= 20) {//axalpusa 20
+    if (game.nivel3.puntos >= 12) {//axalpusa 20
         game.finJuego = true;
         game.nivel3.finNivel = true;
         game.win = true;
