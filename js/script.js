@@ -567,7 +567,7 @@ const verificarNivel2 = () => {
     } else {
         //game.nivel2.teclaNumero = Number(NUM_RUN);
     }
-    if (game.nivel2.puntos >= 1500) { //axalpusa 2000
+    if (game.nivel2.puntos >= 1200) { //axalpusa 2000
         game.nivel2.estado = false;
         game.levelUp = true;
         game.lvl=3;
