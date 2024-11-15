@@ -102,94 +102,8 @@ game = {
     menosVidas: 0,
     frameIndex: 0,
     start: false,
-    lvl:0
+    lvl:1
 }
-
-
-
-
-nivel1Inicio= {
-    objeto1: null,
-    objetos_array: ["Stone.png", "Stone_1.png", "Stone_2.png", "Stone_3.png"],
-    objetos_pocision_array: [470, 540],
-    imagenFondo: null,
-    cantidadObjeto: 0,
-    contadorTotal: 0,
-    carro: [],
-    arregloColisiones: [],
-    numeroDeFrames: 0,
-    movimiento: null,
-    posicionCarro: 510,
-    posicion: null,
-    objeto: null,
-    puntos: 0,
-    estado: true,
-    finNivel: false,
-    teclaNumero: 0,
-    inicioY: 0,
-    altura: 0,
-    dy: 2,
-    cuadro: 1,
-    anchoCarro: null,
-    altoCarro: null
-};
-
-nivel2Inicio=  {
-    sinTronco: false,
-    cantTronco:0,
-    imagenFondo: null,
-    objetos_rio_array: ["tronco.png", "tronco_1.png"],
-    estado: false,
-    finNivel: false,
-    inicioX: 0,
-    personaje: [],
-    ancho: 0,
-    dx: 5,
-    numColumnas: 0,
-    a: null,
-    pocision: null,
-    anchoPersonaje: null,
-    altoPersonaje: null,
-    teclaNumero: 2,
-    corre: true,
-    objeto1: null,
-    objeto: null,
-    posicionPersonaje: 80,
-    cuadro: 1,
-    inicio: true,
-    escala: .15,
-    saltoPersonaje: 200,
-    saltoPersonajeFin: 200,
-    contador_objetos: 0,
-    puntos: 0,
-    objeto_array: new Array(),
-    saltoAbajo: false,
-    saltoArriba: false,
-    cantidadObjeto: 0,
-    posicionSalto: 100,
-    arregloAgua: [],
-    colision_objeto: [],
-    coleccion_objeto: [],
-};
-nivel3Inicio= {
-    imagenFondo: null,
-    contador_objetos: 0,
-    contador_mangos: 0,
-    imagenEnemigo: null,
-    imagenJugador: null,
-    imagenMango: null,
-    imagenObjeto: null,
-    mango_array: new Array(),
-    objeto_array: new Array(),
-    enemigos_array: new Array(),
-    colision_mango: [],
-    colision_objeto: [],
-    coleccion_mango: [],
-    coleccion_objeto: [],
-    puntos: 0,
-    estado: false,
-    finNivel: false
-};
 
 
 /*******************
@@ -470,40 +384,53 @@ const levelUp = () => {
         game.levelUpFrame.push(game.imagenLevelUp);
     }
 }
+function webStorage(valor) {
+    let clave = "nivel";
+    let webStorage = JSON.parse(localStorage.getItem(clave));
+    if (webStorage == null) {
+        webStorage = [];
+    }
+    webStorage.push(valor);
+    localStorage.setItem("nivel", JSON.stringify(webStorage));
+}
+class Nivel{
+    constructor (nivel){
+        this._nivel = nivel;
+    }
+    set nivel(value) {
+        return this._nivel = value;
+    }
 
+    get nivel() {
+        return this._nivel;
+    }
+}
 const inicio = () => {
-    console.log("inicio")
+   // localStorage.clear();
+   //game.lvl=1;
+   // webStorage(new Nivel(game.lvl));
+    let lvlStorage = JSON.parse(localStorage.getItem("nivel"));
+    if (lvlStorage != null) {
+        game.lvl =lvlStorage[lvlStorage.length-1]._nivel;
+    }
     game.start = true;
     if (game.win) {
+        localStorage.clear();
         window.location.reload();
     }
-    console.log(game.gameOver)
     if (game.gameOver ) {//axalpusa
-        game.vidas= 5;
-        game.finJuego = false;
-        game.menosVidas=  0;
-        game.frameIndex= 0;
-        if (game.lvl == 1) {
-            game.nivel1.estado = true;
-        } else if (game.lvl == 2) {
-            game.nivel2.estado = true;
-        } else if (game.lvl == 3) {
-            game.nivel3.estado = true;
-        }
+        window.location.reload();
     }
     game.intro = false;
     game.gameOver = false;
     game.win = false;
     game.levelUp = false;
     game.ctx.clearRect(0, 0, game.canvas.width, game.canvas.height);
-     if (game.nivel1.estado) {
-         game.lvl = 1;
+     if (game.lvl == 1) {
          iniciarNivel1();
-     } else if (game.nivel2.estado) {
-         game.lvl = 2;
+     } else if (game.lvl == 2) {
          iniciarNivel2();
-     } else if (game.nivel3.estado) {
-         game.lvl = 3;
+     } else if (game.lvl == 3) {
          iniciarNivel3();
      }
 }
@@ -606,9 +533,11 @@ const verificarNivel1 = () => {
     if (game.nivel1.contadorTotal === 18) {//axalpusa 20
         game.nivel1.estado = false;
         game.levelUp = true;
-
+        game.lvl=2;
         game.nivel2.estado = true;
         game.start = false;
+        webStorage(new Nivel(game.lvl));
+    
     }
 }
 const verificarNivel2 = () => {
@@ -631,20 +560,23 @@ const verificarNivel2 = () => {
         }
     }
 
-    if (game.tecla[KEY_UP]) {
+    if (game.nivel2.saltoPersonajeFin <= game.nivel2.saltoPersonaje && game.tecla[KEY_UP]) {
         game.nivel2.teclaNumero = Number(NUM_JUMP);
         game.nivel2.saltoArriba = true;
         game.nivel2.saltoAbajo = false;
     } else {
         //game.nivel2.teclaNumero = Number(NUM_RUN);
     }
-    if (game.nivel2.puntos >= 2000) { //axalpusa 2000
+    if (game.nivel2.puntos >= 1500) { //axalpusa 2000
         game.nivel2.estado = false;
         game.levelUp = true;
+        game.lvl=3;
         game.nivel3.estado = true;
         game.start = false;
+        webStorage(new Nivel(game.lvl));
+    
     }
-    if (game.vidas <= game.menosVidas+4) {
+    if (game.vidas <= game.menosVidas) {
         game.finJuego = true;
         game.nivel2.estado = false;
         game.nivel2.finNivel = true;
@@ -660,7 +592,7 @@ const verificarNivel3 = () => {
     game.nivel3.puntos = listaSinDuplicadosMango.length;
     if (game.tecla[KEY_RIGHT]) game.x += 10;
     if (game.tecla[KEY_LEFT]) game.x -= 10;
-    if (game.x > game.canvas.width - 10) game.x = game.canvas.width - 10;
+    if (game.x > game.canvas.width - 10) game.x = game.canvas.width - 50;
     if (game.x < 0) game.x = 10;
     if (Math.random() > 0.99) caidaMango();
     if (Math.random() > 0.99) caidaObjeto();
@@ -669,12 +601,15 @@ const verificarNivel3 = () => {
         game.nivel3.finNivel = true;
         game.gameOver = true;
         game.start = false;
+       
     }
     if (game.nivel3.puntos >= 20) {//axalpusa 20
         game.finJuego = true;
         game.nivel3.finNivel = true;
         game.win = true;
         game.start = false;
+        game.lvl=1;
+        webStorage(new Nivel(game.lvl));
     }
 }
 
@@ -769,7 +704,7 @@ const inicioNivel1 = () => {
         setInterval(function () {
             game.nivel1.dy = game.nivel1.dy + 1;
             game.nivel1.contadorTotal++;
-        }, 50); //axalpusa 2500
+        }, 2500); //axalpusa 2500
         setInterval(function () {
             if (game.nivel1.estado) {
                 game.nivel1.inicioY -= game.nivel1.dy;
